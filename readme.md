@@ -50,7 +50,7 @@ A aplicação envia o prompt para um modelo de IA e retorna:
 * GitHub
 * VS Code
 
-## ⚙️ Como Funciona
+##  Como Funciona
 
 1. Usuário descreve o layout desejado.
 2. O prompt é enviado para a API da Groq.
@@ -73,7 +73,7 @@ HTML + CSS
    ↓
 Preview Instantâneo
 
-## 📂 Estrutura do Projeto
+##  Estrutura do Projeto
 
 text
 CSS-Gerador-com-IA/
@@ -83,7 +83,7 @@ CSS-Gerador-com-IA/
 ├── script.js
 └── README.md
 
-## 🚀 Executando Localmente
+##  Executando Localmente
 
 Clone o projeto:
 
