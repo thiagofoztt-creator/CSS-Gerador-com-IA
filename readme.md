@@ -1,16 +1,15 @@
-# 🎨 CSS Gerador com IA
+#  CSS Gerador com IA
 
 Aplicação web que utiliza Inteligência Artificial para gerar código HTML e CSS automaticamente a partir de descrições em linguagem natural.
 
-## 🚀 Demonstração
+ Demonstração
 
 O usuário descreve o componente, layout ou interface desejada.
 
 Exemplo:
 
-```text
+text
 Crie um card moderno para produto com imagem, título, descrição e botão verde.
-```
 
 A aplicação envia o prompt para um modelo de IA e retorna:
 
@@ -18,9 +17,7 @@ A aplicação envia o prompt para um modelo de IA e retorna:
 * HTML estruturado
 * Preview instantâneo no navegador
 
----
-
-## ✨ Funcionalidades
+ Funcionalidades
 
 ✅ Geração automática de HTML e CSS
 
@@ -33,8 +30,6 @@ A aplicação envia o prompt para um modelo de IA e retorna:
 ✅ Interface responsiva
 
 ✅ Execução totalmente no navegador
-
----
 
 ## 🛠️ Tecnologias Utilizadas
 
@@ -55,8 +50,6 @@ A aplicação envia o prompt para um modelo de IA e retorna:
 * GitHub
 * VS Code
 
----
-
 ## ⚙️ Como Funciona
 
 1. Usuário descreve o layout desejado.
@@ -67,7 +60,7 @@ A aplicação envia o prompt para um modelo de IA e retorna:
 
 Fluxo:
 
-```text
+text
 Usuário
    ↓
 Prompt
@@ -79,48 +72,37 @@ Llama 3.3 70B
 HTML + CSS
    ↓
 Preview Instantâneo
-```
-
----
 
 ## 📂 Estrutura do Projeto
 
-```text
+text
 CSS-Gerador-com-IA/
 │
 ├── index.html
 ├── style.css
 ├── script.js
 └── README.md
-```
-
----
 
 ## 🚀 Executando Localmente
 
 Clone o projeto:
 
-```bash
+bash
 git clone https://github.com/thiagofoztt-creator/CSS-Gerador-com-IA.git
-```
 
 Entre na pasta:
 
-```bash
+bash
 cd CSS-Gerador-com-IA
-```
 
 Abra:
 
-```bash
+bash
 index.html
-```
 
 ou utilize a extensão Live Server do VS Code.
 
----
-
-## 📚 Conceitos Aplicados
+##  Conceitos Aplicados
 
 * Integração com APIs REST
 * Consumo de APIs com Fetch
@@ -130,9 +112,7 @@ ou utilize a extensão Live Server do VS Code.
 * Manipulação do DOM
 * Renderização Dinâmica
 
----
-
-## 🔮 Melhorias Futuras
+##  Melhorias Futuras
 
 * Exportação para arquivos HTML e CSS
 * Histórico de prompts
@@ -141,19 +121,17 @@ ou utilize a extensão Live Server do VS Code.
 * Integração com Tailwind CSS
 * Download automático do projeto gerado
 
----
-
-## 👨‍💻 Autor
+##  Autor
 
 Thiago de Almeida Teles
 
-🔗 GitHub:
+ GitHub:
 https://github.com/thiagofoztt-creator
 
-🌐 Portfólio:
+ Portfólio:
 https://thiagofoztt-creator.github.io/portfolio/
 
-💼 LinkedIn:
+ LinkedIn:
 https://linkedin.com/in/thiago-de-almeida-teles
 
 📧 Contato:
