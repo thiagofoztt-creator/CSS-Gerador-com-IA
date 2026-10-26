@@ -86,15 +86,22 @@ async function gerarCodigo() {
     blocoCodigo.textContent = "Gerando código..."
 
     try {
-        let resposta = await fetch(endereco, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                descricao: textoUsuario
-            })
-        })
+       
+let resposta = await fetch(endereco, {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        descricao: textoUsuario,
+        turnstileToken:
+            document.querySelector(
+                '[name="cf-turnstile-response"]'
+            )?.value || ""
+    })
+})
+
+
 
         let dados = await resposta.json()
 
@@ -199,6 +206,7 @@ if (caixaTexto) {
     caixaTexto.addEventListener("keypress", (evento) => {
         if (evento.key === "Enter" && evento.ctrlKey) {
             gerarCodigo()
+          
         }
     })
 }
