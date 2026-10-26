@@ -31,27 +31,34 @@ function validarEntrada(texto) {
 
 // Tratamento de erros da API
 
+
 function tratarErroAPI(status, dados) {
     const mensagem =
         typeof dados?.error === "string"
             ? dados.error
             : dados?.error?.message;
 
-    switch (status) {
-        case 400:
-            return mensagem || "Descrição inválida.";
-        case 401:
-        case 403:
-            return "Acesso não autorizado.";
-        case 429:
-            return "Limite de requisições atingido. Tente mais tarde.";
-        case 502:
-            return "A IA não conseguiu gerar o código.";
-        case 503:
-            return mensagem || "Serviço temporariamente indisponível.";
-        default:
-            return mensagem || "Erro ao gerar código. Tente novamente.";
+    if (status === 503) {
+        return mensagem || "Serviço temporariamente indisponível.";
     }
+
+    if (status === 429) {
+        return "Limite de requisições atingido. Tente novamente mais tarde.";
+    }
+
+    if (status === 400) {
+        return mensagem || "Descrição inválida.";
+    }
+
+    if (status === 401 || status === 403) {
+        return "Acesso não autorizado.";
+    }
+
+    if (status === 502) {
+        return "A inteligência artificial não conseguiu gerar o código.";
+    }
+
+    return mensagem || "Erro ao gerar código. Tente novamente.";
 }
 
 async function gerarCodigo() {
