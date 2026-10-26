@@ -4,6 +4,48 @@ const ORIGEM_PERMITIDA =
 
 const MODELO = "gemini-2.5-flash";
 
+
+async function validarTurnstile(token, env) {
+  if (
+    !env.TURNSTILE_SECRET_KEY ||
+    typeof token !== "string" ||
+    token.length < 1 ||
+    token.length > 2048
+  ) {
+    return false;
+  }
+
+  try {
+    const resposta = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          secret: env.TURNSTILE_SECRET_KEY,
+          response: token
+        })
+      }
+    );
+
+    if (!resposta.ok) return false;
+
+    const resultado = await resposta.json();
+
+    return (
+      resultado.success === true &&
+      resultado.hostname ===
+        "thiagofoztt-creator.github.io"
+    );
+  } catch (erro) {
+    console.error("Falha na validação Turnstile");
+    return false;
+  }
+}
+
+
 function responder(dados, status = 200, origem = null) {
   const headers = {
     "Content-Type": "application/json; charset=utf-8",
