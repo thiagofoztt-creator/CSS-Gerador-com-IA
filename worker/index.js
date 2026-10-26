@@ -1,4 +1,38 @@
 
+import { DurableObject } from "cloudflare:workers";
+
+export class CotaDiaria extends DurableObject {
+  async reservar() {
+    const dia = new Date().toISOString().slice(0, 10);
+    const chave = `geracoes:${dia}`;
+    const limite = 20;
+
+    return await this.ctx.storage.transaction(async (txn) => {
+      const atual = (await txn.get(chave)) ?? 0;
+
+      if (atual >= limite) {
+        return {
+          permitido: false,
+          utilizadas: atual,
+          limite,
+          dia
+        };
+      }
+
+      const utilizadas = atual + 1;
+      await txn.put(chave, utilizadas);
+
+      return {
+        permitido: true,
+        utilizadas,
+        limite,
+        dia
+      };
+    });
+  }
+}
+
+
 const ORIGEM_PERMITIDA =
   "https://thiagofoztt-creator.github.io";
 
