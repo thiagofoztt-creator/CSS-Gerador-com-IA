@@ -1,0 +1,11 @@
+
+# Credenciais e variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Dependências e arquivos temporários
+node_modules/
+vendor/
+*.log
+  
