@@ -240,6 +240,37 @@ export default {
         );
       }
 
+      
+      // Verificação obrigatória do Turnstile
+      const turnstileToken = dados.turnstileToken;
+
+      if (
+        typeof turnstileToken !== "string" ||
+        !turnstileToken.trim()
+      ) {
+        return responder(
+          { error: "Verificação de segurança obrigatória" },
+          403,
+          origem
+        );
+      }
+
+      const tokenValido = await validarTurnstile(
+        turnstileToken,
+        env
+      );
+
+      if (!tokenValido) {
+        return responder(
+          {
+            error: "Verificação de segurança inválida ou expirada"
+          },
+          403,
+          origem
+        );
+      }
+
+
       const prompt = `
 Você é um gerador de componentes HTML e CSS.
 
