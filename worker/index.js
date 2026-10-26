@@ -117,6 +117,66 @@ export default {
       );
     }
 
+    
+    // Diagnóstico temporário do Turnstile
+    if (
+      url.pathname === "/turnstile-test" &&
+      request.method === "POST"
+    ) {
+      if (env.ENABLE_GENERATION === "true") {
+        return responder(
+          { error: "Diagnóstico indisponível" },
+          403,
+          origem
+        );
+      }
+
+      if (origem !== ORIGEM_PERMITIDA) {
+        return responder(
+          { error: "Origem não autorizada" },
+          403,
+          origem
+        );
+      }
+
+      if (!env.TURNSTILE_SECRET_KEY) {
+        return responder(
+          { error: "Turnstile não configurado" },
+          503,
+          origem
+        );
+      }
+
+      let dados;
+
+      try {
+        dados = await request.json();
+      } catch {
+        return responder(
+          { error: "JSON inválido" },
+          400,
+          origem
+        );
+      }
+
+      const valido = await validarTurnstile(
+        dados?.turnstileToken,
+        env
+      );
+
+      return responder(
+        {
+          status: valido
+            ? "token_valido"
+            : "token_invalido",
+          gemini: "nao_utilizado"
+        },
+        valido ? 200 : 403,
+        origem
+      );
+    }
+
+
     if (url.pathname !== "/api/gerar-codigo") {
       return responder(
         { error: "Endpoint indisponível" },
