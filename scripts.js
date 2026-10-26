@@ -30,16 +30,27 @@ function validarEntrada(texto) {
 }
 
 // Tratamento de erros da API
+
 function tratarErroAPI(status, dados) {
+    const mensagem =
+        typeof dados?.error === "string"
+            ? dados.error
+            : dados?.error?.message;
+
     switch (status) {
+        case 400:
+            return mensagem || "Descrição inválida.";
         case 401:
-            return "Erro: Autenticação falhou. Verifique sua chave de API."
+        case 403:
+            return "Acesso não autorizado.";
         case 429:
-            return "Erro: Muitas requisições. Aguarde alguns segundos."
-        case 500:
-            return "Erro: Servidor indisponível. Tente novamente."
+            return "Limite de requisições atingido. Tente mais tarde.";
+        case 502:
+            return "A IA não conseguiu gerar o código.";
+        case 503:
+            return mensagem || "Serviço temporariamente indisponível.";
         default:
-            return dados?.error?.message || "Erro ao gerar código. Tente novamente."
+            return mensagem || "Erro ao gerar código. Tente novamente.";
     }
 }
 
