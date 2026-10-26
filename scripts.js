@@ -4,7 +4,9 @@ let botao = document.querySelector(".botao-gerar")
 let botaoCopiar = document.querySelector(".botao-copiar")
 
 
-let endereco = "/api/gerar-codigo"
+
+let endereco = "https://css-gerador-com-ia.thiagofoztt.workers.dev/api/gerar-codigo"
+  
   
 
 // Estado para controlar se está gerando
