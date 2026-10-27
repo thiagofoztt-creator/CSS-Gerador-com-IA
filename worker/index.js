@@ -104,9 +104,9 @@ export default {
     const origem = request.headers.get("Origin");
 
       try {
-        // Instância separada da produção
-        const contador =
-          env.COTA_DIARIA.getByName("gerador-teste");
+    // Instância separada da produção
+    const contador =
+        env.COTA_DIARIA.getByName("gerador-teste");
 
         const resultado = await contador.reservar();
 
@@ -127,8 +127,6 @@ export default {
       }
     }
 
-
-    // Endpoint de diagnóstico
     if (
       request.method === "GET" &&
       url.pathname === "/health"
@@ -141,25 +139,6 @@ export default {
     }
 
     {
-      // Só funciona enquanto a geração estiver desativada
-      if (env.ENABLE_GENERATION === "true") {
-        return responder(
-          { error: "Diagnóstico desativado" },
-          403
-        );
-      }
-
-      if (!env.GEMINI_RATE_LIMIT) {
-        return responder(
-          { error: "Rate limit não configurado" },
-          503
-        );
-      }
-
-      const resultado = await env.GEMINI_RATE_LIMIT.limit({
-        key: "teste-rate-limit"
-      });
-
       return responder(
         {
           status: resultado.success
@@ -172,6 +151,14 @@ export default {
       );
     }
     
+    if (url.pathname !== "/api/gerar-codigo") {
+      return responder(
+        { error: "Endpoint indisponível" },
+        404,
+        origem
+      );
+    }
+
     // Permitir preflight do navegador
     if (request.method === "OPTIONS") {
       if (origem !== ORIGEM_PERMITIDA) {
