@@ -127,6 +127,13 @@ export default {
       }
     }
 
+   
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const origem = request.headers.get("Origin");
+
+    // Verificação de funcionamento da API
     if (
       request.method === "GET" &&
       url.pathname === "/health"
@@ -137,6 +144,17 @@ export default {
         version: "1.1.0"
       });
     }
+
+    // Permitir apenas o endpoint oficial
+    if (url.pathname !== "/api/gerar-codigo") {
+      return responder(
+        { error: "Endpoint indisponível" },
+        404,
+        origem
+      );
+    }
+
+    // O tratamento OPTIONS continua abaixo
 
     {
       return responder(
