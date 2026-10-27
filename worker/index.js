@@ -102,35 +102,6 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origem = request.headers.get("Origin");
-    
-    // Diagnóstico da cota — sem chamar Gemini
-    if (
-      request.method === "POST" &&
-      url.pathname === "/cota-test"
-    ) {
-      if (env.ENABLE_GENERATION === "true") {
-        return responder(
-          { error: "Diagnóstico desativado" },
-          403,
-          origem
-        );
-      }
-
-      if (origem !== ORIGEM_PERMITIDA) {
-        return responder(
-          { error: "Origem não autorizada" },
-          403,
-          origem
-        );
-      }
-
-      if (!env.COTA_DIARIA) {
-        return responder(
-          { error: "Contador indisponível" },
-          503,
-          origem
-        );
-      }
 
       try {
         // Instância separada da produção
@@ -169,11 +140,7 @@ export default {
       });
     }
 
-    // Teste de rate limit sem consumir Gemini
-    if (
-      request.method === "GET" &&
-      url.pathname === "/rate-limit-test"
-    ) {
+    {
       // Só funciona enquanto a geração estiver desativada
       if (env.ENABLE_GENERATION === "true") {
         return responder(
@@ -204,74 +171,7 @@ export default {
         resultado.success ? 200 : 429
       );
     }
-
     
-    // Diagnóstico temporário do Turnstile
-    if (
-      url.pathname === "/turnstile-test" &&
-      request.method === "POST"
-    ) {
-      if (env.ENABLE_GENERATION === "true") {
-        return responder(
-          { error: "Diagnóstico indisponível" },
-          403,
-          origem
-        );
-      }
-
-      if (origem !== ORIGEM_PERMITIDA) {
-        return responder(
-          { error: "Origem não autorizada" },
-          403,
-          origem
-        );
-      }
-
-      if (!env.TURNSTILE_SECRET_KEY) {
-        return responder(
-          { error: "Turnstile não configurado" },
-          503,
-          origem
-        );
-      }
-
-      let dados;
-
-      try {
-        dados = await request.json();
-      } catch {
-        return responder(
-          { error: "JSON inválido" },
-          400,
-          origem
-        );
-      }
-
-      const valido = await validarTurnstile(
-        dados?.turnstileToken,
-        env
-      );
-
-      return responder(
-        {
-          status: valido
-            ? "token_valido"
-            : "token_invalido",
-          gemini: "nao_utilizado"
-        },
-        valido ? 200 : 403,
-        origem
-      );
-    }
-
-
-    if (url.pathname !== "/api/gerar-codigo") {
-      return responder(
-        { error: "Endpoint indisponível" },
-        404
-      );
-    }
-
     // Permitir preflight do navegador
     if (request.method === "OPTIONS") {
       if (origem !== ORIGEM_PERMITIDA) {
