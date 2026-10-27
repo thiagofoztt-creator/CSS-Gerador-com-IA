@@ -387,6 +387,35 @@ Regras:
 - Não utilize blocos Markdown.
 `;
 
+      // Reservar uma unidade da cota diária
+      if (!env.COTA_DIARIA) {
+        return responder(
+          { error: "Controle de cota indisponível" },
+          503,
+          origem
+        );
+      }
+
+      const id = env.COTA_DIARIA.idFromName(
+        "gerador-global"
+      );
+
+      const contador = env.COTA_DIARIA.get(id);
+
+      const cota = await contador.reservar();
+
+      if (!cota.permitido) {
+        return responder(
+          {
+            error: "Limite diário de gerações atingido",
+            limite: cota.limite,
+            utilizadas: cota.utilizadas
+          },
+          429,
+          origem
+        );
+      }
+
       const resposta = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`,
         {
