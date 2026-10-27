@@ -210,14 +210,7 @@ export default {
     }
 
     // Geração desativada até finalizar a proteção
-    if (env.ENABLE_GENERATION !== "true") {
-      return responder(
-        { error: "Geração temporariamente desativada" },
-        503,
-        origem
-      );
-    }
-
+    
     if (!env.GEMINI_API_KEY) {
       return responder(
         { error: "Serviço de IA não configurado" },
@@ -317,6 +310,16 @@ export default {
           origem
         );
       }
+      
+      // Validar Turnstile antes de verificar a geração
+      if (env.ENABLE_GENERATION !== "true") {
+        return responder(
+          { error: "Geração temporariamente desativada" },
+          503,
+          origem
+        );
+      }
+
 
 
       const prompt = `
