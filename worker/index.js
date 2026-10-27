@@ -102,6 +102,60 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origem = request.headers.get("Origin");
+    
+    // Diagnóstico da cota — sem chamar Gemini
+    if (
+      request.method === "POST" &&
+      url.pathname === "/cota-test"
+    ) {
+      if (env.ENABLE_GENERATION === "true") {
+        return responder(
+          { error: "Diagnóstico desativado" },
+          403,
+          origem
+        );
+      }
+
+      if (origem !== ORIGEM_PERMITIDA) {
+        return responder(
+          { error: "Origem não autorizada" },
+          403,
+          origem
+        );
+      }
+
+      if (!env.COTA_DIARIA) {
+        return responder(
+          { error: "Contador indisponível" },
+          503,
+          origem
+        );
+      }
+
+      try {
+        // Instância separada da produção
+        const contador =
+          env.COTA_DIARIA.getByName("gerador-teste");
+
+        const resultado = await contador.reservar();
+
+        return responder(
+          {
+            ...resultado,
+            gemini: "nao_utilizado"
+          },
+          resultado.permitido ? 200 : 429,
+          origem
+        );
+      } catch {
+        return responder(
+          { error: "Falha no teste da cota" },
+          500,
+          origem
+        );
+      }
+    }
+
 
     // Endpoint de diagnóstico
     if (
