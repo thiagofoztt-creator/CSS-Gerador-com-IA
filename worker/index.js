@@ -1,13 +1,19 @@
 
 import { DurableObject } from "cloudflare:workers";
 
+const ORIGEM_PERMITIDA =
+  "https://thiagofoztt-creator.github.io";
+
+const MODELO = "gemini-2.5-flash";
+
+// Contador diário persistente
 export class CotaDiaria extends DurableObject {
   async reservar() {
     const dia = new Date().toISOString().slice(0, 10);
     const chave = `geracoes:${dia}`;
     const limite = 20;
 
-    return await this.ctx.storage.transaction(async (txn) => {
+    return this.ctx.storage.transaction(async (txn) => {
       const atual = (await txn.get(chave)) ?? 0;
 
       if (atual >= limite) {
@@ -32,18 +38,31 @@ export class CotaDiaria extends DurableObject {
   }
 }
 
+// Respostas JSON e CORS
+function responder(dados, status = 200, origem = null) {
+  const headers = {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+    "X-Content-Type-Options": "nosniff"
+  };
 
-const ORIGEM_PERMITIDA =
-  "https://thiagofoztt-creator.github.io";
+  if (origem === ORIGEM_PERMITIDA) {
+    headers["Access-Control-Allow-Origin"] = origem;
+    headers["Vary"] = "Origin";
+  }
 
-const MODELO = "gemini-2.5-flash";
+  return new Response(JSON.stringify(dados), {
+    status,
+    headers
+  });
+}
 
-
+// Validar Turnstile no servidor
 async function validarTurnstile(token, env) {
   if (
     !env.TURNSTILE_SECRET_KEY ||
     typeof token !== "string" ||
-    token.length < 1 ||
+    !token.trim() ||
     token.length > 2048
   ) {
     return false;
@@ -74,66 +93,21 @@ async function validarTurnstile(token, env) {
         "thiagofoztt-creator.github.io"
     );
   } catch (erro) {
-    console.error("Falha na validação Turnstile");
+    console.error(
+      "Falha ao validar Turnstile:",
+      erro?.name || "erro"
+    );
     return false;
   }
 }
 
-
-function responder(dados, status = 200, origem = null) {
-  const headers = {
-    "Content-Type": "application/json; charset=utf-8",
-    "Cache-Control": "no-store",
-    "X-Content-Type-Options": "nosniff"
-  };
-
-  if (origem === ORIGEM_PERMITIDA) {
-    headers["Access-Control-Allow-Origin"] = origem;
-    headers["Vary"] = "Origin";
-  }
-
-  return new Response(JSON.stringify(dados), {
-    status,
-    headers
-  });
-}
-
+// Worker principal
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const origem = request.headers.get("Origin");
 
-      try {
-    // Instância separada da produção
-    const contador =
-        env.COTA_DIARIA.getByName("gerador-teste");
-
-        const resultado = await contador.reservar();
-
-        return responder(
-          {
-            ...resultado,
-            gemini: "nao_utilizado"
-          },
-          resultado.permitido ? 200 : 429,
-          origem
-        );
-      } catch {
-        return responder(
-          { error: "Falha no teste da cota" },
-          500,
-          origem
-        );
-      }
-    }
-
-   
-export default {
-  async fetch(request, env) {
-    const url = new URL(request.url);
-    const origem = request.headers.get("Origin");
-
-    // Verificação de funcionamento da API
+    // Endpoint de saúde
     if (
       request.method === "GET" &&
       url.pathname === "/health"
@@ -145,7 +119,7 @@ export default {
       });
     }
 
-    // Permitir apenas o endpoint oficial
+    // Apenas a rota oficial
     if (url.pathname !== "/api/gerar-codigo") {
       return responder(
         { error: "Endpoint indisponível" },
@@ -154,30 +128,7 @@ export default {
       );
     }
 
-    // O tratamento OPTIONS continua abaixo
-
-    {
-      return responder(
-        {
-          status: resultado.success
-            ? "permitido"
-            : "bloqueado",
-          limite: "5 requisições por 60 segundos",
-          gemini: "não utilizado"
-        },
-        resultado.success ? 200 : 429
-      );
-    }
-    
-    if (url.pathname !== "/api/gerar-codigo") {
-      return responder(
-        { error: "Endpoint indisponível" },
-        404,
-        origem
-      );
-    }
-
-    // Permitir preflight do navegador
+    // Preflight CORS
     if (request.method === "OPTIONS") {
       if (origem !== ORIGEM_PERMITIDA) {
         return responder(
@@ -206,7 +157,6 @@ export default {
       );
     }
 
-    // Bloquear origens diferentes do site autorizado
     if (origem !== ORIGEM_PERMITIDA) {
       return responder(
         { error: "Origem não autorizada" },
@@ -214,23 +164,22 @@ export default {
       );
     }
 
-    // Geração desativada até finalizar a proteção
-    
-    if (!env.GEMINI_API_KEY) {
+    if (!env.GEMINI_RATE_LIMIT) {
       return responder(
-        { error: "Serviço de IA não configurado" },
+        { error: "Rate limit não configurado" },
         503,
         origem
       );
     }
 
     try {
-      // Limite compartilhado para testes iniciais
-      const limite = await env.GEMINI_RATE_LIMIT.limit({
-        key: "gerador-publico"
-      });
+      // Rate limit: 5 requisições por 60 segundos
+      const frequencia =
+        await env.GEMINI_RATE_LIMIT.limit({
+          key: "gerador-publico"
+        });
 
-      if (!limite.success) {
+      if (!frequencia.success) {
         return responder(
           { error: "Limite de requisições atingido" },
           429,
@@ -238,7 +187,9 @@ export default {
         );
       }
 
-      const tipo = request.headers.get("Content-Type") || "";
+      // Verificar formato da requisição
+      const tipo =
+        request.headers.get("Content-Type") || "";
 
       if (!tipo.toLowerCase().includes("application/json")) {
         return responder(
@@ -270,7 +221,7 @@ export default {
         );
       }
 
-      const descricao = dados.descricao;
+      const descricao = dados?.descricao;
 
       if (
         typeof descricao !== "string" ||
@@ -286,13 +237,18 @@ export default {
         );
       }
 
-      
-      // Verificação obrigatória do Turnstile
-      const turnstileToken = dados.turnstileToken;
+      // Verificação Turnstile
+      if (!env.TURNSTILE_SECRET_KEY) {
+        return responder(
+          { error: "Turnstile não configurado" },
+          503,
+          origem
+        );
+      }
 
       if (
-        typeof turnstileToken !== "string" ||
-        !turnstileToken.trim()
+        typeof dados?.turnstileToken !== "string" ||
+        !dados.turnstileToken.trim()
       ) {
         return responder(
           { error: "Verificação de segurança obrigatória" },
@@ -302,7 +258,7 @@ export default {
       }
 
       const tokenValido = await validarTurnstile(
-        turnstileToken,
+        dados.turnstileToken,
         env
       );
 
@@ -315,8 +271,8 @@ export default {
           origem
         );
       }
-      
-      // Validar Turnstile antes de verificar a geração
+
+      // Manter Gemini desativado durante homologação
       if (env.ENABLE_GENERATION !== "true") {
         return responder(
           { error: "Geração temporariamente desativada" },
@@ -325,31 +281,15 @@ export default {
         );
       }
 
+      if (!env.GEMINI_API_KEY) {
+        return responder(
+          { error: "Serviço de IA não configurado" },
+          503,
+          origem
+        );
+      }
 
-
-      const prompt = `
-Você é um gerador de componentes HTML e CSS.
-
-Crie uma interface visual conforme a descrição.
-
-Descrição:
-${descricao}
-
-Regras:
-- Retorne um documento HTML completo.
-- Inclua o CSS dentro de uma tag style.
-- Use HTML5 e CSS moderno.
-- Não inclua JavaScript.
-- Não inclua scripts ou eventos inline.
-- Não carregue recursos externos.
-- Não inclua links para arquivos externos.
-- Não use iframes.
-- Não utilize imagens remotas.
-- Responda somente com o HTML.
-- Não utilize blocos Markdown.
-`;
-
-      // Reservar uma unidade da cota diária
+      // Conferir Durable Object
       if (!env.COTA_DIARIA) {
         return responder(
           { error: "Controle de cota indisponível" },
@@ -358,11 +298,9 @@ Regras:
         );
       }
 
-      const id = env.COTA_DIARIA.idFromName(
-        "gerador-global"
-      );
-
-      const contador = env.COTA_DIARIA.get(id);
+      // Reservar uma geração na cota global
+      const contador =
+        env.COTA_DIARIA.getByName("gerador-global");
 
       const cota = await contador.reservar();
 
@@ -378,6 +316,28 @@ Regras:
         );
       }
 
+      // Prompt para Gemini
+      const prompt = `
+Você é um gerador de componentes HTML e CSS.
+
+Crie uma interface visual conforme a descrição:
+
+${descricao}
+
+Regras:
+- Retorne um documento HTML completo.
+- Inclua o CSS dentro da tag style.
+- Use HTML5 e CSS moderno.
+- Não inclua JavaScript.
+- Não inclua scripts ou eventos inline.
+- Não carregue recursos externos.
+- Não inclua links ou imagens remotas.
+- Não use iframes.
+- Responda somente com HTML.
+- Não utilize blocos Markdown.
+`;
+
+      // Chamada Gemini
       const resposta = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${MODELO}:generateContent`,
         {
@@ -409,9 +369,7 @@ Regras:
         );
 
         return responder(
-          {
-            error: "Não foi possível gerar o código"
-          },
+          { error: "Não foi possível gerar o código" },
           502,
           origem
         );
@@ -427,6 +385,7 @@ Regras:
         .join("")
         .trim();
 
+      // Remover delimitadores Markdown
       html = html
         .replace(/^```(?:html)?\s*/i, "")
         .replace(/\s*```$/, "")
@@ -448,16 +407,20 @@ Regras:
         );
       }
 
-      // Compatível com o script.js atual
-      return responder({
-        choices: [
-          {
-            message: {
-              content: html
+      // Compatibilidade com scripts.js
+      return responder(
+        {
+          choices: [
+            {
+              message: {
+                content: html
+              }
             }
-          }
-        ]
-      }, 200, origem);
+          ]
+        },
+        200,
+        origem
+      );
 
     } catch (erro) {
       console.error(
