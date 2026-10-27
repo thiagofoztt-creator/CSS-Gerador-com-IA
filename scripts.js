@@ -65,9 +65,6 @@ async function gerarCodigo() {
     // Evitar múltiplos cliques
     if (gerando) return
   
-if (window.turnstile) {
-    window.turnstile.reset();
-}
     let textoUsuario = document.querySelector(".caixa-texto").value
     let blocoCodigo = document.querySelector(".bloco-codigo")
     let resultadoCodigo = document.querySelector(".resultado-codigo")
@@ -88,21 +85,31 @@ if (window.turnstile) {
     blocoCodigo.classList.add("loading")
     blocoCodigo.textContent = "Gerando código..."
 
-    try {
-       
-let resposta = await fetch(endereco, {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        descricao: textoUsuario,
-        turnstileToken:
-            document.querySelector(
-                '[name="cf-turnstile-response"]'
-            )?.value || ""
-    })
-})
+   
+try {
+    // Capturar o token antes de enviar
+    const token = window.turnstile?.getResponse() || "";
+
+    if (!token) {
+        blocoCodigo.classList.remove("loading");
+        blocoCodigo.textContent =
+            "Aguarde a verificação de segurança e tente novamente.";
+        return;
+    }
+
+    const resposta = await fetch(endereco, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            descricao: textoUsuario,
+            turnstileToken: token
+        })
+    });
+
+    const dados = await resposta.json();
+
 
 
 
@@ -154,13 +161,18 @@ let resposta = await fetch(endereco, {
         }
         
         console.error("Erro completo:", erro)
-    } finally {
-        // Resetar estado
-        gerando = false
-        botao.disabled = false
-        botao.textContent = "Gerar Código"
+    
+} finally {
+    gerando = false;
+    botao.disabled = false;
+    botao.textContent = "Gerar Código";
+
+    // Renovar o token somente após a tentativa
+    if (window.turnstile) {
+        window.turnstile.reset();
     }
 }
+
 
 function copiarCodigo() {
     let blocoCodigo = document.querySelector(".bloco-codigo")
