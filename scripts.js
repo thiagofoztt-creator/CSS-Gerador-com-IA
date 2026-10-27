@@ -64,7 +64,10 @@ function tratarErroAPI(status, dados) {
 async function gerarCodigo() {
     // Evitar múltiplos cliques
     if (gerando) return
-
+  
+if (window.turnstile) {
+    window.turnstile.reset();
+}
     let textoUsuario = document.querySelector(".caixa-texto").value
     let blocoCodigo = document.querySelector(".bloco-codigo")
     let resultadoCodigo = document.querySelector(".resultado-codigo")
