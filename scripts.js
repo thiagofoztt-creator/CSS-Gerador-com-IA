@@ -110,11 +110,6 @@ try {
 
     const dados = await resposta.json();
 
-
-
-
-        let dados = await resposta.json()
-
         // Validar resposta
         if (!resposta.ok) {
             blocoCodigo.classList.remove("loading")
@@ -172,7 +167,7 @@ try {
         window.turnstile.reset();
     }
 }
-
+}
 
 function copiarCodigo() {
     let blocoCodigo = document.querySelector(".bloco-codigo")
