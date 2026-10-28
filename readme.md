@@ -1,138 +1,237 @@
-#  CSS Gerador com IA
+# CSS Gerador com IA
 
-Aplicação web que utiliza Inteligência Artificial para gerar código HTML e CSS automaticamente a partir de descrições em linguagem natural.
+**Gerador de interfaces HTML e CSS utilizando Inteligência Artificial Generativa.**
 
- Demonstração
+Aplicação web desenvolvida para transformar descrições em linguagem natural em interfaces HTML e CSS, com geração automática de código e visualização instantânea no navegador.
 
-O usuário descreve o componente, layout ou interface desejada.
+O projeto integra **Google Gemini, Cloudflare Workers e GitHub Pages**, utilizando uma arquitetura que separa o frontend do processamento de IA.
 
-Exemplo:
+## 🌐 Demonstração Online
 
-text
-Crie um card moderno para produto com imagem, título, descrição e botão verde.
+**[Acessar CSS Gerador com IA](https://thiagofoztt-creator.github.io/CSS-Gerador-com-IA/)**
 
-A aplicação envia o prompt para um modelo de IA e retorna:
+### Exemplo de utilização
 
-* CSS pronto para uso
-* HTML estruturado
-* Preview instantâneo no navegador
+Digite uma descrição como:
 
- Funcionalidades
+> Crie um card moderno de produto com título, descrição e botão verde.
 
-✅ Geração automática de HTML e CSS
+A aplicação processa a solicitação e apresenta:
 
-✅ Integração com IA Generativa
+- Código HTML estruturado.
+- Estilos CSS incorporados ao documento.
+- Prévia visual da interface gerada.
+- Opção para copiar o código.
 
-✅ Preview em tempo real
+## 🚀 Funcionalidades
 
-✅ Cópia rápida do código gerado
-
-✅ Interface responsiva
-
-✅ Execução totalmente no navegador
+- ✅ Geração automática de HTML e CSS com IA.
+- ✅ Integração com Google Gemini 2.5 Flash.
+- ✅ Visualização do resultado em tempo real.
+- ✅ Cópia do código gerado.
+- ✅ Interface responsiva.
+- ✅ Validação das descrições enviadas.
+- ✅ Tratamento de erros da API.
+- ✅ Proteção contra solicitações automatizadas com Cloudflare Turnstile.
+- ✅ Controle de requisições e cota diária.
+- ✅ Separação entre frontend e backend.
 
 ## 🛠️ Tecnologias Utilizadas
 
 ### Frontend
 
-* HTML5
-* CSS3
-* JavaScript (Vanilla)
+- HTML5
+- CSS3
+- JavaScript Vanilla
+- Fetch API
+- GitHub Pages
+
+### Backend
+
+- Cloudflare Workers
+- JavaScript
+- API REST
+- Cloudflare Durable Objects
+- SQLite Storage
+- Cloudflare Rate Limiting
 
 ### Inteligência Artificial
 
-* Groq API
-* Llama 3.3 70B Versatile
+- Google Gemini API
+- Modelo Gemini 2.5 Flash
+- Engenharia de prompts
 
 ### Ferramentas
 
-* Git
-* GitHub
-* VS Code
+- Git
+- GitHub
+- Visual Studio Code
+- Cloudflare Wrangler
 
-##  Como Funciona
+## 🏗️ Arquitetura do Sistema
 
-1. Usuário descreve o layout desejado.
-2. O prompt é enviado para a API da Groq.
-3. O modelo LLM gera HTML e CSS.
-4. O código é exibido na tela.
-5. O preview é renderizado automaticamente usando iframe.
+O sistema utiliza uma arquitetura com frontend estático e backend serverless.
 
-Fluxo:
+**Fluxo de processamento:**
 
-text
+1. O usuário acessa o frontend no GitHub Pages.
+2. Digita a descrição da interface desejada.
+3. O frontend realiza a validação básica da entrada.
+4. O Cloudflare Turnstile fornece um token de verificação.
+5. A solicitação é enviada ao Cloudflare Worker.
+6. O Worker valida a origem, a entrada, o token e os limites de utilização.
+7. O Worker consulta a Google Gemini API.
+8. A resposta é devolvida ao frontend.
+9. O HTML/CSS é exibido e renderizado em um iframe com sandbox.
+
+```text
 Usuário
-   ↓
-Prompt
-   ↓
-Groq API
-   ↓
-Llama 3.3 70B
-   ↓
+   |
+   v
+GitHub Pages
+   |
+   v
+JavaScript / Fetch API
+   |
+   v
+Cloudflare Worker
+   |
+   +-- Validação de entrada
+   +-- Cloudflare Turnstile
+   +-- Rate Limiting
+   +-- Durable Object
+   |
+   v
+Google Gemini API
+   |
+   v
 HTML + CSS
-   ↓
-Preview Instantâneo
+   |
+   v
+Código + Preview
+```
 
-##  Estrutura do Projeto
+## 🔒 Segurança e Controle de Uso
 
-text
+O projeto implementa diferentes mecanismos de proteção:
+
+- Chave da API Gemini mantida no ambiente do Cloudflare Worker.
+- Validação de token do Cloudflare Turnstile no servidor.
+- Restrição de origem para solicitações do frontend oficial.
+- Rate limit configurado para 5 requisições por 60 segundos.
+- Cota global configurada para 20 gerações diárias.
+- Validação de descrições entre 5 e 500 caracteres.
+- Controle de ativação da geração por variável de ambiente.
+- Tratamento de códigos de erro HTTP.
+- Renderização do código gerado em iframe com sandbox.
+
+Essas medidas reduzem riscos operacionais e ajudam a controlar o consumo da API, mas não substituem testes e auditorias de segurança.
+
+## 📁 Estrutura do Projeto
+
+```text
 CSS-Gerador-com-IA/
 │
 ├── index.html
 ├── style.css
-├── script.js
-└── README.md
+├── scripts.js
+├── readme.md
+├── .gitignore
+├── wrangler.jsonc
+│
+└── worker/
+    └── index.js
+```
 
-##  Executando Localmente
+**Principais arquivos:**
 
-Clone o projeto:
+- `index.html`: estrutura da interface.
+- `style.css`: estilização responsiva.
+- `scripts.js`: interação com o usuário, chamadas à API e renderização.
+- `worker/index.js`: validação, limites de utilização e integração com Gemini.
+- `wrangler.jsonc`: configuração do Cloudflare Worker.
+- `.gitignore`: exclusão de arquivos locais e sensíveis do versionamento.
 
-bash
+## 💻 Executando Localmente
+
+Clone o repositório:
+
+```bash
 git clone https://github.com/thiagofoztt-creator/CSS-Gerador-com-IA.git
+```
 
-Entre na pasta:
+Acesse a pasta:
 
-bash
+```bash
 cd CSS-Gerador-com-IA
+```
 
-Abra:
+Abra o projeto no Visual Studio Code e utilize a extensão Live Server para visualizar a interface.
 
-bash
-index.html
+**Observação:** a visualização local do frontend não garante o funcionamento da geração por IA. O Turnstile e o backend estão configurados para o domínio público do projeto. A geração completa depende da configuração e disponibilidade desses serviços.
 
-ou utilize a extensão Live Server do VS Code.
+## 🔌 API
 
-##  Conceitos Aplicados
+### Consultar status do serviço
 
-* Integração com APIs REST
-* Consumo de APIs com Fetch
-* Programação Assíncrona
-* Engenharia de Prompt
-* Inteligência Artificial Generativa
-* Manipulação do DOM
-* Renderização Dinâmica
+```http
+GET /health
+```
 
-##  Melhorias Futuras
+### Solicitar geração de código
 
-* Exportação para arquivos HTML e CSS
-* Histórico de prompts
-* Biblioteca de templates
-* Temas prontos
-* Integração com Tailwind CSS
-* Download automático do projeto gerado
+```http
+POST /api/gerar-codigo
+Content-Type: application/json
+```
 
-##  Autor
+Exemplo de estrutura da solicitação:
 
-Thiago de Almeida Teles
+```json
+{
+  "descricao": "Crie um botão verde moderno",
+  "turnstileToken": "TOKEN_VALIDO_DO_TURNSTILE"
+}
+```
 
- GitHub:
-https://github.com/thiagofoztt-creator
+A API exige validação de segurança e respeita os limites de utilização configurados.
 
- Portfólio:
-https://thiagofoztt-creator.github.io/portfolio/
+## 🧠 Conhecimentos Aplicados
 
- LinkedIn:
-https://linkedin.com/in/thiago-de-almeida-teles
+- Desenvolvimento frontend.
+- Consumo e integração de APIs REST.
+- Programação JavaScript assíncrona.
+- Arquitetura serverless.
+- Inteligência Artificial Generativa.
+- Engenharia de prompts.
+- Validação de dados.
+- Segurança de aplicações web.
+- Controle de consumo de serviços externos.
+- Tratamento de erros HTTP.
+- Integração e implantação com GitHub e Cloudflare.
 
-📧 Contato:
-[thiagofoztt@gmail.com](mailto:thiagofoztt@gmail.com)
+## 📈 Melhorias Futuras
+
+- Histórico de prompts e gerações.
+- Biblioteca de componentes reutilizáveis.
+- Exportação organizada dos arquivos HTML e CSS.
+- Templates de interface.
+- Seleção de temas visuais.
+- Monitoramento de utilização da API.
+- Testes automatizados.
+- Melhorias de acessibilidade.
+- Aprimoramento da experiência em dispositivos móveis.
+
+## 👨‍💻 Autor
+
+**Thiago de Almeida Teles**
+
+Desenvolvimento de software, aplicações web, integração de APIs e soluções com Inteligência Artificial.
+
+- [GitHub](https://github.com/thiagofoztt-creator)
+- [LinkedIn](https://linkedin.com/in/thiago-de-almeida-teles)
+- [Portfólio](https://thiagofoztt-creator.github.io/portfolio/)
+
+---
+
+Projeto desenvolvido para aplicação prática de conhecimentos em desenvolvimento web, arquitetura serverless e integração com Inteligência Artificial Generativa.
